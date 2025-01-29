@@ -126,7 +126,7 @@ st.image('https://digitaal.scp.nl/ssn2018/assets/img/uitsnede.jpg')
 
 if st.button('Verbinden met CBS API'):
     # Ruwe CBS data ophalen
-    with st.spinner('Data verzamelen uit CBS API...'):
+    with st.spinner('Data verzamelen uit CBS API... (dit kan een paar minuten duren)'):
         cols2024 = ['ID', 'WijkenEnBuurten', 'Gemeentenaam_1', 'SoortRegio_2', 'AantalInwoners_5', 'k_0Tot15Jaar_8', 'k_15Tot25Jaar_9', 'k_25Tot45Jaar_10', 'k_45Tot65Jaar_11', 'k_65JaarOfOuder_12', 'HuishoudensTotaal_29', 'Eenpersoonshuishoudens_30', 'HuishoudensZonderKinderen_31', 'HuishoudensMetKinderen_32', 'GemiddeldeHuishoudensgrootte_33', 'Bevolkingsdichtheid_34', 'AantalInkomensontvangers_81', 'GemiddeldInkomenPerInkomensontvanger_82', 'GemiddeldInkomenPerInwoner_83', 'HuishOnderOfRondSociaalMinimum_90']
         cols2022 = ['ID', 'Gemeentenaam_1', 'WijkenEnBuurten', 'SoortRegio_2', 'AantalInwoners_5', 'Bevolkingsdichtheid_33', 'HuishoudensTotaal_28', 'GemiddeldeHuishoudensgrootte_32', 'Eenpersoonshuishoudens_29', 'HuishoudensZonderKinderen_30', 'HuishoudensMetKinderen_31', 'k_0Tot15Jaar_8', 'k_15Tot25Jaar_9', 'k_25Tot45Jaar_10', 'k_45Tot65Jaar_11', 'k_65JaarOfOuder_12', 'GemiddeldInkomenPerInwoner_72', 'GemiddeldInkomenPerInkomensontvanger_71', 'AantalInkomensontvangers_70', 'HuishOnderOfRondSociaalMinimum_79']
 
@@ -144,7 +144,7 @@ if st.button('Verbinden met CBS API'):
 if 'df' in st.session_state:
     df = st.session_state['df']
 
-    dropdown_values = [f'{id} - {WeB} ({df['Gemeentenaam']})' for id, WeB in zip(df['ID'], df['WijkenEnBuurten'])]
+    dropdown_values = [f'{id} - {WeB} ({gemeentenaam})' for id, WeB, gemeentenaam in zip(df['ID'], df['WijkenEnBuurten'], df['Gemeentenaam'])]
     selection = st.selectbox(
         "Regio",
         dropdown_values,  # dropdown menu
