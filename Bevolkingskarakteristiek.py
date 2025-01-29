@@ -122,7 +122,7 @@ def format_value(row, column):
 ########################################################################
 
 st.title('Bevolkingskarakteristiek')
-st.image('https://digitaal.scp.nl/ssn2018/assets/img/uitsnede.jpg')
+st.image('https://gmo-research.ai/en/application/files/5816/6011/7522/GettyImages-1150668297_1.jpg')
 
 if st.button('Verbinden met CBS API'):
     # Ruwe CBS data ophalen
