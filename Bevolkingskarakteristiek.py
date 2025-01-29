@@ -144,7 +144,7 @@ if st.button('Verbinden met CBS API'):
 if 'df' in st.session_state:
     df = st.session_state['df']
 
-    dropdown_values = [f'{id} - {WeB} ({df['Gemeente']})' for id, WeB in zip(df['ID'], df['WijkenEnBuurten'])]
+    dropdown_values = [f'{id} - {WeB} ({df['Gemeentenaam']})' for id, WeB in zip(df['ID'], df['WijkenEnBuurten'])]
     selection = st.selectbox(
         "Regio",
         dropdown_values,  # dropdown menu
