@@ -180,7 +180,7 @@ if 'df' in st.session_state:
             'GemiddeldeHuishoudensgrootte': 'Gem. huishoudensgrootte',
             'Eenpersoonshuishoudens': '% Eenpersoonshuishoudens',
             'HuishoudensZonderKinderen': '% Huishoudens zonder kinderen',
-            'HuishoudensMetKinderen': '% Huishoudens zonder kinderen',
+            'HuishoudensMetKinderen': '% Huishoudens met kinderen',
 
             'k_0Tot15Jaar': '% 0-14 jaar',
             'k_15Tot25Jaar': '% 15-24 jaar',
