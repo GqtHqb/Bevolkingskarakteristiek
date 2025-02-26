@@ -5,205 +5,227 @@ import re
 
 pd.set_option('display.max_rows', 100)
 
-########################################################################
+############################################################################
 
+class CBSData:
+    def __init__(self, jaar=2024):
+        self.table_column_ids = {
+            2024: {'table_id': '85984NED'},
+            2023: {'table_id': '85618NED'},
+            2022: {'table_id': '85318NED'},
+            2021: {'table_id': '85039NED'}
+        }
 
+        self.kenmerken = {
+            'ID': {'nieuwe_naam': 'ID', 'value_type': 'abs', 'formatting': ''}, 
+            'Gemeentenaam': {'nieuwe_naam': 'Gemeentenaam', 'value_type': 'abs', 'formatting': ''}, 
+            'WijkenEnBuurten': {'nieuwe_naam': 'Wijken en Buurten', 'value_type': 'abs', 'formatting': ''}, 
+            'SoortRegio': {'nieuwe_naam': 'Soort regio', 'value_type': 'abs', 'formatting': ''},
+            
+            'AantalInwoners': {'nieuwe_naam': 'Aantal inwoners', 'value_type': 'abs', 'formatting': '{:,.0f}'}, 
+            'Bevolkingsdichtheid': {'nieuwe_naam': 'Bevolkingsdichtheid', 'value_type': 'abs', 'formatting': '{:,.0f}'}, 
 
-########################################################################
+            'HuishoudensTotaal': {'nieuwe_naam': 'Aantal huishoudens', 'value_type': 'abs', 'formatting': '{:,.0f}'}, 
+            'GemiddeldeHuishoudensgrootte': {'nieuwe_naam': 'Gem. huishoudensgrootte', 'value_type': 'abs', 'formatting': '{:,.1f}'}, 
+            'Eenpersoonshuishoudens': {'nieuwe_naam': '% Eenpersoonshuishoudens', 'value_type': '%', 'formatting': '{:.0%}'}, 
+            'HuishoudensZonderKinderen': {'nieuwe_naam': '% Huishoudens zonder kinderen', 'value_type': '%', 'formatting': '{:.0%}'}, 
+            'HuishoudensMetKinderen': {'nieuwe_naam': '% Huishoudens met kinderen', 'value_type': '%', 'formatting': '{:.0%}'}, 
+            
+            'k_0Tot15Jaar': {'nieuwe_naam': '% 0-14 jaar', 'value_type': '%', 'formatting': '{:.0%}'}, 
+            'k_15Tot25Jaar': {'nieuwe_naam': '% 15-24 jaar', 'value_type': '%', 'formatting': '{:.0%}'}, 
+            'k_25Tot45Jaar': {'nieuwe_naam': '% 25-44 jaar', 'value_type': '%', 'formatting': '{:.0%}'}, 
+            'k_45Tot65Jaar': {'nieuwe_naam': '% 45-64 jaar', 'value_type': '%', 'formatting': '{:.0%}'}, 
+            'k_65JaarOfOuder': {'nieuwe_naam': '% +65 jaar', 'value_type': '%', 'formatting': '{:.0%}'}, 
 
-def dict2dataframe(data0):
-    df = pd.DataFrame(data0)
-    df.columns = df.columns.str.replace(r'_\d+$', '', regex=True)
-    return df
+            'GemiddeldInkomenPerInwoner': {'nieuwe_naam': 'Gemiddeld inkomen per inwoner', 'value_type': 'abs', 'formatting': '{:,.2f}'}, 
+            'AantalInkomensontvangers': {'nieuwe_naam': 'Aantal inkomensontvangers', 'value_type': '%', 'formatting': ''}, 
+            'GemiddeldInkomenPerInkomensontvanger': {'nieuwe_naam': 'Gemiddeld inkomen per inkomensontvanger', 'value_type': 'abs', 'formatting': '€ {:,.2f}'}, 
+            'HuishOnderOfRondSociaalMinimum': {'nieuwe_naam': 'Huishoudens onder of rond sociaal minumum', 'value_type': 'abs', 'formatting': '{:.0f}%'},
 
-def filter_and_transpose_data(df, selection_id):
-    # df = pd.DataFrame(data0)
-    # df.columns = df.columns.str.replace(r'_\d+$', '', regex=True) # Verwijderen van "_72" suffix aan het einde van de kolomnaam
+            'GemiddeldeWOZWaardeVanWoningen': {'nieuwe_naam': 'Gemiddelde WOZ-waarde', 'value_type': 'abs', 'formatting': '€ {:.0f}X000'}, 
+            'Koopwoningen': {'nieuwe_naam': '% Koopwoningen', 'value_type': 'abs', 'formatting': '{:.0f}%'}, 
+            'HuurwoningenTotaal': {'nieuwe_naam': ' % Huurwoningen', 'value_type': 'abs', 'formatting': '{:.0f}%'}, 
+            'PersonenautoSPerHuishouden': {'nieuwe_naam': "Gemiddeld aantal auto's per huishouden", 'value_type': 'abs', 'formatting': '{:,.2f}'}, 
+            'AfstandTotGroteSupermarkt': {'nieuwe_naam': 'Gemiddelde afstand tot supermarkt', 'value_type': 'abs', 'formatting': '{:,.2f}'}
+        }
 
-    # Filteren
-    df = df.loc[
-        ((df['SoortRegio'].str.strip() == 'Land')         & (df['WijkenEnBuurten'].str.strip() == 'Nederland'))
-        | (df['ID'] == selection_id)
-    ]
-    assert len(df) == 2, f"\nVerwachtte 2 rijen, vond {len(df)} rijen\n\n\n{df}"
+        self.jaar = jaar
+        self.df = self.load_table(jaar=jaar) # alle gemeenten
+        self.df_regio = 'Je moet df nog filteren met <filter_regio(self, idx=None, formatted=True)>'
+        self.df_regio_formatted = 'Leeg'
 
-    # Transpose
-    df = df.T
-    df.insert(0, 'Kenmerk', df.index)
-    df = df.reset_index(drop=True)
+    def load_table(self, jaar=2024):
+        # Data ophalen vanuit CBS API
+        data0 = cbsodata.get_data(self.table_column_ids[jaar]['table_id'])
+        df = pd.DataFrame(data0)
 
-    return df
+        df.columns = df.columns.str.replace(r'_\d+$', '', regex=True)   # suffix verwijderen
+        df = df[self.kenmerken.keys()]                                  # Alleen benodigde kolommen selecteren
+        return df
+    
+    def abs2perc(self, df):
+        perc_kenmerken = [k for k, v in self.kenmerken.items() if v['value_type'] == '%']
 
-def rename_columns(df):
-    # Convert column names to string and find numeric columns
-    numeric_cols = [col for col in df.columns if str(col).isdigit()]
+        for col in df.columns:
+            aantal_inwoners = df.at['AantalInwoners', col]
 
-    # Ensure there are exactly two numeric columns
-    if len(numeric_cols) == 2:
-        # Sort the numeric columns to identify the smaller and larger values
-        smaller, larger = sorted(numeric_cols, key=int)
+            for pk in perc_kenmerken:
+                value = df.at[pk, col]
+                if not pd.isna(value) and value is not None:
+                    df.at[pk, col] = value / aantal_inwoners
+                    
+        return df
 
-        # Rename the columns
-        df = df.rename(columns={smaller: 'Nederland', larger: 'Regionaal'})
+    def calculate_afwijking(self, A, B):
+        try:
+            afwijking = (B-A)/A
+            # afwijking = f'{afwijking: .1%}'
+            return afwijking
+        except:
+            return ''
+        
+    def format_cells(self, df):
+        # NL en regio kolommen formatten
+        for k, v in self.kenmerken.items():
+            formatting_pattern = v['formatting']
 
-    return df
+            if formatting_pattern not in {'', None}:
+                for col in df.columns[:2]:
+                    try:
+                        df.at[k, col] = formatting_pattern.format(df.at[k, col]).replace(',', 'X').replace('.', ',').replace('X', '.')
+                    except:
+                        pass
+        
+        # Afwijking kolom formatten
+        formatted_afwijkingen = []
+        
+        for afwijking in df['Afwijking']:
+            try:
+                formatted_afwijking = '{:.1%}'.format(afwijking).replace(',', 'X').replace('.', ',').replace('X', '.')
+                formatted_afwijkingen.append(formatted_afwijking)
+            except:
+                formatted_afwijkingen.append(afwijking)
 
-def abs2perc(df, rows_to_transform):
-    # Get the columns to process (excluding 'Kenmerk')
-    data_columns = [col for col in df.columns if col != 'Kenmerk']
+        df['Afwijking'] = formatted_afwijkingen
 
-    # Get the values of 'AantalInwoners' for each column
-    aantal_inwoners = {
-        col: df.loc[df['Kenmerk'] == 'AantalInwoners', col].values[0] for col in data_columns
-    }
+        # Kenmerken formatten
+        df.insert(0, 'Kenmerk', df.index)
+        df = df.reset_index(drop=True)
+        df['Kenmerk'] = df['Kenmerk'].replace({k:v['nieuwe_naam'] for k,v in self.kenmerken.items()})
+        df = df.style.set_properties(subset=['Kenmerk'], **{'text-align': 'left'})
 
-    # Loop through the specified rows and convert the values to percentages
-    for row in rows_to_transform:
-        for col in data_columns:
-            # Get the value for the row and column
-            value = df.loc[df['Kenmerk'] == row, col].values[0]
+        return df
 
-            if not pd.isna(value) and value is not None:
-                # Convert to percentage relative to AantalInwoners
-                percentage = (value / aantal_inwoners[col]) * 100
-                percentage = round(percentage, 1)
+    def filter_regio(self, idx=None, formatted=True):
+        # Filteren op regio
+        df = self.df.loc[self.df['ID'].isin([0, idx])] # 0 == Nederland
+        assert len(df) == 2, f"\nVerwachtte 2 rijen, vond {len(df)} rijen\n\n\n{df}"
 
-                # Update the DataFrame with the percentage value
-                df.loc[df['Kenmerk'] == row, col] = percentage
-                
+        # Transpose
+        df = df.T
 
-    return df
+        # Kolommen renamen 
+        df.columns = [df.at['WijkenEnBuurten', c] for c in df.columns] # ([0, 1170] -> ['Nederland', 'Amsterdam'])
+        
+        # Absolute waarden naar percentages omrekenen voor geselecteerde kenmerken
+        df = self.abs2perc(df)
 
-# def format_numbers(df):
-#     data_columns = [col for col in df.columns if col != 'Kenmerk']
+        # Afwijking berekenen
+        df['Afwijking'] = df.apply(lambda row: self.calculate_afwijking(row[df.columns[0]], row[df.columns[1]]), axis=1)
 
-#     def number2formattedstring(number):
-#         if type(number) in [int, float]:
-#             if number > 1000:
-#                 # formatted = f"{number:,.2f}".replace(",", ".")
-#                 formatted = f"{number:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
-#             else:
-#                 formatted = f"{number:,.1f}".replace(",", "X").replace(".", ",").replace("X", ".")
-#         else:
-#             formatted = number
-#         return formatted
+        # df toevoegen aan class
+        self.df_regio = df
+        
+        # cellen formatten
+        if formatted == True:
+            df_formatted = self.format_cells(df.copy())
+            self.df_regio_formatted = df_formatted
 
-#     for col in data_columns:
-#         df[col] = df[col].apply(number2formattedstring)
-#     return df
+############################################################################
 
-def calculate_afwijking(A, B):
-    try:
-        afwijking = (B-A)/A * 100
-        afwijking = round(afwijking, 1)
-    except:
-        afwijking = ''
-    return afwijking
+# st.title('Bevolkingskarakteristiek')
+# img = st.image('https://gmo-research.ai/en/application/files/5816/6011/7522/GettyImages-1150668297_1.jpg')
 
-# Format function
-def format_value(row, column):
-    if row['Kenmerk'] in percentage_rows:
-        # Format as percentage
-        return f"{row[column]:.1f}%" if pd.notnull(row[column]) else row[column]
+# with st.sidebar:
+#     jaar = st.pills('Jaar', [2024, 2023, 2022, 2021], default=2024, selection_mode="single")
 
-    elif row['Kenmerk'] in ['GemiddeldInkomenPerInwoner', 'GemiddeldInkomenPerInkomensontvanger']:
-        # Multiply by 1000 and format with thousands separator and euro sign
-        if pd.notnull(row[column]) and isinstance(row[column], (int, float)):
-            return f"€ {int(row[column] * 1000):,}".replace(",", ".")
-        else:
-            return f'{row[column]}'
-    else:
-        # Format with thousands separator if >= 1000
-        if pd.notnull(row[column]) and isinstance(row[column], (int, float)) and row[column] >= 1000:
-            return f"{int(row[column]):,}".replace(",", ".")
-        else:
-            return f'{row[column]}'
+# # API
+# api_button = st.button('Verbinden met CBS API')
+# if api_button:
+#     with st.spinner('Data ophalen vanuit CBS API (dit kan een paar minuten duren...)'):
+#         data = CBSData(jaar=jaar)
 
-########################################################################
+#     st.success('Data opgehaald!', icon="✅")
+#     st.session_state['data'] = data
+
+# # Data verwerken
+# if 'data' in st.session_state:
+#     data = st.session_state['data']
+
+#     with st.sidebar:
+#         dropdown_values = [f'{id} - {WeB} ({gemeentenaam})' for id, WeB, gemeentenaam in zip(data.df['ID'], data.df['WijkenEnBuurten'], data.df['Gemeentenaam'])]
+
+#         selection = st.selectbox(
+#             "Regio",
+#             dropdown_values,  # dropdown menu
+#             placeholder="Selecteer een regio..."
+#         )
+#         selection_id = int(re.search(r'\d+', selection).group())
+
+#     if st.button('Run', type='primary', icon='🏃‍♂️‍➡️'):
+#         data.filter_regio(idx=selection_id, formatted=True)
+
+#         img.empty()
+
+#         st.dataframe(data.df_regio_formatted, height=1000, use_container_width=True, hide_index=True)
 
 st.title('Bevolkingskarakteristiek')
-st.image('https://gmo-research.ai/en/application/files/5816/6011/7522/GettyImages-1150668297_1.jpg')
+img = st.image('https://gmo-research.ai/en/application/files/5816/6011/7522/GettyImages-1150668297_1.jpg')
 
-if st.button('Verbinden met CBS API'):
-    # Ruwe CBS data ophalen
-    with st.spinner('Data verzamelen uit CBS API... (dit kan een paar minuten duren)'):
-        cols2024 = ['ID', 'WijkenEnBuurten', 'Gemeentenaam_1', 'SoortRegio_2', 'AantalInwoners_5', 'k_0Tot15Jaar_8', 'k_15Tot25Jaar_9', 'k_25Tot45Jaar_10', 'k_45Tot65Jaar_11', 'k_65JaarOfOuder_12', 'HuishoudensTotaal_29', 'Eenpersoonshuishoudens_30', 'HuishoudensZonderKinderen_31', 'HuishoudensMetKinderen_32', 'GemiddeldeHuishoudensgrootte_33', 'Bevolkingsdichtheid_34', 'AantalInkomensontvangers_81', 'GemiddeldInkomenPerInkomensontvanger_82', 'GemiddeldInkomenPerInwoner_83', 'HuishOnderOfRondSociaalMinimum_90']
-        cols2022 = ['ID', 'Gemeentenaam_1', 'WijkenEnBuurten', 'SoortRegio_2', 'AantalInwoners_5', 'Bevolkingsdichtheid_33', 'HuishoudensTotaal_28', 'GemiddeldeHuishoudensgrootte_32', 'Eenpersoonshuishoudens_29', 'HuishoudensZonderKinderen_30', 'HuishoudensMetKinderen_31', 'k_0Tot15Jaar_8', 'k_15Tot25Jaar_9', 'k_25Tot45Jaar_10', 'k_45Tot65Jaar_11', 'k_65JaarOfOuder_12', 'GemiddeldInkomenPerInwoner_72', 'GemiddeldInkomenPerInkomensontvanger_71', 'AantalInkomensontvangers_70', 'HuishOnderOfRondSociaalMinimum_79']
+with st.sidebar:
+    st.header('**:rainbow[Opties]:**')
+    st.text('Kies hieronder welke jaren je wilt meenemen. Klik daarna op verbinden. \n\nLet wel: hoe meer jaren, hoe langer het laden. \n\nAls je na het runnen de jaren wilt veranderen, moet je opnieuw op de verbinden-knop klikken.')
 
-        table_column_ids = {
-            2024: {'table_id': '85984NED', 'cols': cols2024},
-            2023: {'table_id': '85618NED', 'cols': []},
-            2022: {'table_id': '85318NED', 'cols': cols2022},
-        }
-    
-        data0 = cbsodata.get_data(table_column_ids[2024]['table_id'], select=table_column_ids[2024]['cols'])
-        df = dict2dataframe(data0)
+    jaren = st.pills('Jaar', [2024, 2023, 2022, 2021], default=[2024, 2023], selection_mode="multi")
 
-        st.session_state['df'] = df
-    
-if 'df' in st.session_state:
-    df = st.session_state['df']
+    # API
+    api_button = st.button('Verbinden met CBS API')
+    if api_button:
+        with st.spinner('Data ophalen vanuit CBS API (dit kan een paar minuten duren...)'):
 
-    dropdown_values = [f'{id} - {WeB} ({gemeentenaam})' for id, WeB, gemeentenaam in zip(df['ID'], df['WijkenEnBuurten'], df['Gemeentenaam'])]
-    selection = st.selectbox(
-        "Regio",
-        dropdown_values,  # dropdown menu
-        placeholder="Selecteer een regio..."
-    )
+            meerjarendata = {}
+            for jaar in jaren:
+                data = CBSData(jaar=jaar)
+                meerjarendata[jaar] = data
+                st.success(f'Data {jaar} opgehaald!', icon="✅")
 
-    selection_id = int(re.search(r'\d+', selection).group())
+            st.session_state['meerjarendata'] = meerjarendata
+            
 
-    if st.button('Run'):
-        # List of rows to convert to percentages
-        percentage_rows = [
-            'Eenpersoonshuishoudens', 'HuishoudensZonderKinderen', 'HuishoudensMetKinderen',
-            'k_0Tot15Jaar', 'k_15Tot25Jaar', 'k_25Tot45Jaar', 'k_45Tot65Jaar', 'k_65JaarOfOuder',
-            'AantalInkomensontvangers'
-        ]
+# Data verwerken
+if 'meerjarendata' in st.session_state:
+    meerjarendata = st.session_state['meerjarendata']
+    img.empty()
 
-        # Data filteren en processen
-        df = filter_and_transpose_data(df, selection_id)
-        df = rename_columns(df)
-        df = abs2perc(df, percentage_rows)
-        df['Afwijking'] = df.apply(lambda row: calculate_afwijking(row['Nederland'], row['Regionaal']), axis=1)
+    with st.sidebar:
+        dropdown_values = [f'{id} - {WeB} ({gemeentenaam})' for id, WeB, gemeentenaam in zip(meerjarendata[jaren[0]].df['ID'], meerjarendata[jaren[0]].df['WijkenEnBuurten'], meerjarendata[jaren[0]].df['Gemeentenaam'])]
 
-        nieuw_rijnamen = {
-            'ID': 'ID',
-            'Gemeentenaam': 'Gemeentenaam',
-            'WijkenEnBuurten': 'Wijken en Buurten',
-            'SoortRegio': 'Soort regio',
+        selection = st.selectbox(
+            "Regio",
+            dropdown_values,  # dropdown menu
+            placeholder="Selecteer een regio..."
+        )
+        selection_id = int(re.search(r'\d+', selection).group())
 
-            'AantalInwoners': 'Aantal inwoners',
-            'Bevolkingsdichtheid': 'Bevolkingsdichtheid',
+    if st.button('Run', type='primary', icon='🏃‍♂️‍➡️'):
 
-            'HuishoudensTotaal': 'Aantal huishoudens',
-            'GemiddeldeHuishoudensgrootte': 'Gem. huishoudensgrootte',
-            'Eenpersoonshuishoudens': '% Eenpersoonshuishoudens',
-            'HuishoudensZonderKinderen': '% Huishoudens zonder kinderen',
-            'HuishoudensMetKinderen': '% Huishoudens met kinderen',
+        # Dynamically create tabs based on the list
+        tabs = st.tabs([str(year) for year in meerjarendata.keys()])
 
-            'k_0Tot15Jaar': '% 0-14 jaar',
-            'k_15Tot25Jaar': '% 15-24 jaar',
-            'k_25Tot45Jaar': '% 25-44 jaar',
-            'k_45Tot65Jaar': '% 45-64 jaar',
-            'k_65JaarOfOuder': '% +65 jaar',
+        # Iterate through each tab and display content
+        for tab, year in zip(tabs, meerjarendata.keys()):
+            with tab:
+                st.header(f"{year}")
 
-            'GemiddeldInkomenPerInwoner': 'Gemiddeld inkomen per inwoner',
-            'AantalInkomensontvangers': 'Aantal inkomensontvangers',
-            'GemiddeldInkomenPerInkomensontvanger': 'Gemiddeld inkomen per inkomensontvanger',
-            'HuishOnderOfRondSociaalMinimum': 'Huishoudens onder of rond sociaal minumum'
-        }
-
-        # Apply formatting
-        df['Nederland'] = df.apply(lambda row: format_value(row, 'Nederland'), axis=1)
-        df['Regionaal'] = df.apply(lambda row: format_value(row, 'Regionaal'), axis=1)
-        df['Afwijking'] = df['Afwijking'].apply(lambda x: f"{float(x):.1f}%" if pd.notnull(x) and str(x).replace('.', '', 1).lstrip('-').isdigit() else x)
-        df['Kenmerk'] = df['Kenmerk'].replace(nieuw_rijnamen)
-
-        # # Apply left-alignment to the 'Kenmerk' column
-        # df = df.style.set_properties(subset=['Kenmerk'], **{'text-align': 'left'})
-        # df.set_table_styles([dict(selector='th', props=[('text-align', 'left')])])
-
-        # dfA = df.loc[df['Kenmerk'].isin()]
-
-        st.dataframe(df, height=800, hide_index=True)
+                meerjarendata[year].filter_regio(idx=selection_id, formatted=True)
+                st.dataframe(meerjarendata[year].df_regio_formatted, height=1000, use_container_width=True, hide_index=True)
