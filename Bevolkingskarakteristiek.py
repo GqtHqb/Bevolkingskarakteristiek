@@ -45,9 +45,9 @@ class CBSData:
             'k_65JaarOfOuder': {'nieuwe_naam': '% +65 jaar', 'value_type': '%', 'formatting': '{:.0%}'}, 
 
             'GemiddeldInkomenPerInwoner': {'nieuwe_naam': 'Gemiddeld inkomen per inwoner', 'value_type': 'abs', 'formatting': '{:,.2f}'}, 
-            'AantalInkomensontvangers': {'nieuwe_naam': 'Aantal inkomensontvangers', 'value_type': '%', 'formatting': ''}, 
+            'AantalInkomensontvangers': {'nieuwe_naam': 'Aantal inkomensontvangers', 'value_type': '%', 'formatting': '{:.0%}'}, 
             'GemiddeldInkomenPerInkomensontvanger': {'nieuwe_naam': 'Gemiddeld inkomen per inkomensontvanger', 'value_type': 'abs', 'formatting': '€ {:,.2f}'}, 
-            'HuishOnderOfRondSociaalMinimum': {'nieuwe_naam': 'Huishoudens onder of rond sociaal minumum', 'value_type': 'abs', 'formatting': '{:.0f}%'},
+            'HuishOnderOfRondSociaalMinimum': {'nieuwe_naam': 'Huishoudens onder of rond sociaal minumum', 'value_type': 'abs', 'formatting': '{:.1f}%'},
 
             'GemiddeldeWOZWaardeVanWoningen': {'nieuwe_naam': 'Gemiddelde WOZ-waarde', 'value_type': 'abs', 'formatting': '€ {:.0f}X000'}, 
             'Koopwoningen': {'nieuwe_naam': '% Koopwoningen', 'value_type': 'abs', 'formatting': '{:.0f}%'}, 
@@ -191,7 +191,7 @@ img = st.image('https://gmo-research.ai/en/application/files/5816/6011/7522/Gett
 
 with st.sidebar:
     st.header('**:rainbow[Opties]:**')
-    st.text('Kies hieronder welke jaren je wilt meenemen. Klik daarna op verbinden. \n\nLet wel: hoe meer jaren, hoe langer het laden. \n\nAls je na het runnen de jaren wilt veranderen, moet je opnieuw op de verbinden-knop klikken.')
+    st.text('Kies hieronder welke jaren je wilt meenemen. Klik daarna op verbinden. \n\nLet wel: hoe meer jaren, hoe langer het laden. \n\nAls je na het runnen de jaren wilt veranderen, moet je opnieuw op de verbinden-knop klikken. Als je een nieuwe regio wilt kiezen, hoef je niet opnieuwe te verbinden.')
 
     jaren = st.pills('Jaar', [2024, 2023, 2022, 2021], default=[2024, 2023], selection_mode="multi")
 
