@@ -44,7 +44,7 @@ class CBSData:
             'k_45Tot65Jaar': {'nieuwe_naam': '% 45-64 jaar', 'value_type': '%', 'formatting': '{:.0%}'}, 
             'k_65JaarOfOuder': {'nieuwe_naam': '% +65 jaar', 'value_type': '%', 'formatting': '{:.0%}'}, 
 
-            'GemiddeldInkomenPerInwoner': {'nieuwe_naam': 'Gemiddeld inkomen per inwoner', 'value_type': 'abs', 'formatting': '{:,.2f}'}, 
+            'GemiddeldInkomenPerInwoner': {'nieuwe_naam': 'Gemiddeld inkomen per inwoner', 'value_type': 'abs', 'formatting': '€ {:.0f}X000'}, 
             'AantalInkomensontvangers': {'nieuwe_naam': 'Aantal inkomensontvangers', 'value_type': '%', 'formatting': '{:.0%}'}, 
             'GemiddeldInkomenPerInkomensontvanger': {'nieuwe_naam': 'Gemiddeld inkomen per inkomensontvanger', 'value_type': 'abs', 'formatting': '€ {:.0f}X000'}, 
             'HuishOnderOfRondSociaalMinimum': {'nieuwe_naam': 'Huishoudens onder of rond sociaal minumum', 'value_type': 'abs', 'formatting': '{:.1f}%'},
