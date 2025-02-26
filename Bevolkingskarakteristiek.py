@@ -9,11 +9,18 @@ pd.set_option('display.max_rows', 100)
 
 class CBSData:
     def __init__(self, jaar=2024):
+        # self.table_column_ids = {
+        #     2024: {'table_id': '85984NED'},
+        #     2023: {'table_id': '85618NED'},
+        #     2022: {'table_id': '85318NED'},
+        #     2021: {'table_id': '85039NED'}
+        # }
+
         self.table_column_ids = {
-            2024: {'table_id': '85984NED'},
-            2023: {'table_id': '85618NED'},
-            2022: {'table_id': '85318NED'},
-            2021: {'table_id': '85039NED'}
+            2024: {'table_id': '85984NED', 'cols': ['ID', 'WijkenEnBuurten', 'Gemeentenaam_1', 'SoortRegio_2', 'AantalInwoners_5', 'k_0Tot15Jaar_8', 'k_15Tot25Jaar_9', 'k_25Tot45Jaar_10', 'k_45Tot65Jaar_11', 'k_65JaarOfOuder_12', 'HuishoudensTotaal_29', 'Eenpersoonshuishoudens_30', 'HuishoudensZonderKinderen_31', 'HuishoudensMetKinderen_32', 'GemiddeldeHuishoudensgrootte_33', 'Bevolkingsdichtheid_34', 'GemiddeldeWOZWaardeVanWoningen_39', 'Koopwoningen_47', 'HuurwoningenTotaal_48', 'AantalInkomensontvangers_81', 'GemiddeldInkomenPerInkomensontvanger_82', 'GemiddeldInkomenPerInwoner_83', 'HuishOnderOfRondSociaalMinimum_90', 'PersonenautoSPerHuishouden_114', 'AfstandTotGroteSupermarkt_118']}, 
+            2023: {'table_id': '85618NED', 'cols': ['ID', 'WijkenEnBuurten', 'Gemeentenaam_1', 'SoortRegio_2', 'AantalInwoners_5', 'k_0Tot15Jaar_8', 'k_15Tot25Jaar_9', 'k_25Tot45Jaar_10', 'k_45Tot65Jaar_11', 'k_65JaarOfOuder_12', 'HuishoudensTotaal_29', 'Eenpersoonshuishoudens_30', 'HuishoudensZonderKinderen_31', 'HuishoudensMetKinderen_32', 'GemiddeldeHuishoudensgrootte_33', 'Bevolkingsdichtheid_34', 'GemiddeldeWOZWaardeVanWoningen_36', 'Koopwoningen_41', 'HuurwoningenTotaal_42', 'AantalInkomensontvangers_76', 'GemiddeldInkomenPerInkomensontvanger_77', 'GemiddeldInkomenPerInwoner_78', 'HuishOnderOfRondSociaalMinimum_85', 'PersonenautoSPerHuishouden_109', 'AfstandTotGroteSupermarkt_113']}, 
+            2022: {'table_id': '85318NED', 'cols': ['ID', 'WijkenEnBuurten', 'Gemeentenaam_1', 'SoortRegio_2', 'AantalInwoners_5', 'k_0Tot15Jaar_8', 'k_15Tot25Jaar_9', 'k_25Tot45Jaar_10', 'k_45Tot65Jaar_11', 'k_65JaarOfOuder_12', 'HuishoudensTotaal_28', 'Eenpersoonshuishoudens_29', 'HuishoudensZonderKinderen_30', 'HuishoudensMetKinderen_31', 'GemiddeldeHuishoudensgrootte_32', 'Bevolkingsdichtheid_33', 'GemiddeldeWOZWaardeVanWoningen_35', 'Koopwoningen_40', 'HuurwoningenTotaal_41', 'AantalInkomensontvangers_70', 'GemiddeldInkomenPerInkomensontvanger_71', 'GemiddeldInkomenPerInwoner_72', 'HuishOnderOfRondSociaalMinimum_79', 'PersonenautoSPerHuishouden_103', 'AfstandTotGroteSupermarkt_107']}, 
+            2021: {'table_id': '85039NED', 'cols': ['ID', 'WijkenEnBuurten', 'Gemeentenaam_1', 'SoortRegio_2', 'AantalInwoners_5', 'k_0Tot15Jaar_8', 'k_15Tot25Jaar_9', 'k_25Tot45Jaar_10', 'k_45Tot65Jaar_11', 'k_65JaarOfOuder_12', 'HuishoudensTotaal_28', 'Eenpersoonshuishoudens_29', 'HuishoudensZonderKinderen_30', 'HuishoudensMetKinderen_31', 'GemiddeldeHuishoudensgrootte_32', 'Bevolkingsdichtheid_33', 'GemiddeldeWOZWaardeVanWoningen_35', 'Koopwoningen_40', 'HuurwoningenTotaal_41', 'AantalInkomensontvangers_70', 'GemiddeldInkomenPerInkomensontvanger_71', 'GemiddeldInkomenPerInwoner_72', 'HuishOnderOfRondSociaalMinimum_79', 'PersonenautoSPerHuishouden_103', 'AfstandTotGroteSupermarkt_107']}
         }
 
         self.kenmerken = {
@@ -56,7 +63,7 @@ class CBSData:
 
     def load_table(self, jaar=2024):
         # Data ophalen vanuit CBS API
-        data0 = cbsodata.get_data(self.table_column_ids[jaar]['table_id'])
+        data0 = cbsodata.get_data(self.table_column_ids[jaar]['table_id'], select=self.table_column_ids[jaar]['cols'])
         df = pd.DataFrame(data0)
 
         df.columns = df.columns.str.replace(r'_\d+$', '', regex=True)   # suffix verwijderen
@@ -229,3 +236,6 @@ if 'meerjarendata' in st.session_state:
 
                 meerjarendata[year].filter_regio(idx=selection_id, formatted=True)
                 st.dataframe(meerjarendata[year].df_regio_formatted, height=1000, use_container_width=True, hide_index=True)
+                
+
+# streamlit run /Users/quincyliem/My\ Drive/Projects/Kardol/Bevolkingskarakteristiek/bevolkingskarakterstiek2.py
