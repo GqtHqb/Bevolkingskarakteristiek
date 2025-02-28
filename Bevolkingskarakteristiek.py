@@ -189,6 +189,8 @@ class CBSData:
 
 ############################################################################
 
+st.set_page_config(page_title="Bevolkingskarakteristiek")
+
 st.title('Bevolkingskarakteristiek')
 img = st.image('https://gmo-research.ai/en/application/files/5816/6011/7522/GettyImages-1150668297_1.jpg')
 
