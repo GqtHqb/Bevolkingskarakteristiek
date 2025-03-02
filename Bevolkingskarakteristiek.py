@@ -229,7 +229,9 @@ if 'meerjarendata' in st.session_state:
         )
         selection_id = int(re.search(r'\d+', selection).group())
 
-    if st.button("Los geht's", type='primary', icon='🔥'):
+        run_button = st.button("Los geht's", type='primary', icon='🔥')
+
+    if run_button:
 
         # Dynamically create tabs based on the list
         tabs = st.tabs([str(year) for year in meerjarendata.keys()])
