@@ -95,38 +95,6 @@ class CBSData:
             except:
                 return None
 
-    # def format_cells(self, df):
-    #     # NL en regio kolommen formatten
-    #     for k, v in self.kenmerken.items():
-    #         formatting_pattern = v['formatting']
-
-    #         if formatting_pattern not in {'', None}:
-    #             for col in df.columns[:2]:
-    #                 try:
-    #                     df.at[k, col] = formatting_pattern.format(df.at[k, col]).replace(',', 'X').replace('.', ',').replace('X', '.')
-    #                 except:
-    #                     pass
-        
-    #     # Afwijking kolom formatten
-    #     formatted_afwijkingen = []
-        
-    #     for afwijking in df['Afwijking']:
-    #         try:
-    #             formatted_afwijking = '{:.1%}'.format(afwijking).replace(',', 'X').replace('.', ',').replace('X', '.')
-    #             formatted_afwijkingen.append(formatted_afwijking)
-    #         except:
-    #             formatted_afwijkingen.append(afwijking)
-
-    #     df['Afwijking'] = formatted_afwijkingen
-
-    #     # Kenmerken formatten
-    #     df.insert(0, 'Kenmerk', df.index)
-    #     df = df.reset_index(drop=True)
-    #     df['Kenmerk'] = df['Kenmerk'].replace({k:v['nieuwe_naam'] for k,v in self.kenmerken.items()})
-    #     df = df.style.set_properties(subset=['Kenmerk'], **{'text-align': 'left'})
-
-    #     return df
-
     def format_cells(self, df):
         # Kolommen Nederland en [regio]
         for k, v in self.kenmerken.items(): # data -> self
@@ -187,6 +155,15 @@ class CBSData:
             df_formatted = self.format_cells(df.copy())
             self.df_regio_formatted = df_formatted
 
+@st.dialog('Info')
+def show_info():
+    st.write(
+        'Kies hieronder welke jaren je wilt meenemen. Klik daarna op verbinden. 
+        \n\nLet wel: hoe meer jaren, hoe langer het laden. 
+        \n\nAls je na het runnen de jaren wilt veranderen, moet je opnieuw op de verbinden-knop klikken. 
+        Als je een nieuwe regio wilt kiezen, hoef je niet opnieuwe te verbinden.'
+    )
+
 ############################################################################
 
 st.set_page_config(page_title="Bevolkingskarakteristiek")
@@ -195,9 +172,11 @@ st.title('Bevolkingskarakteristiek')
 img = st.image('https://gmo-research.ai/en/application/files/5816/6011/7522/GettyImages-1150668297_1.jpg')
 
 with st.sidebar:
+    if st.button('**ⓘ**', type='tertiary'): show_info()
+        
     st.header('**:rainbow[Opties]:**')
-    st.text('Kies hieronder welke jaren je wilt meenemen. Klik daarna op verbinden. \n\nLet wel: hoe meer jaren, hoe langer het laden. \n\nAls je na het runnen de jaren wilt veranderen, moet je opnieuw op de verbinden-knop klikken. Als je een nieuwe regio wilt kiezen, hoef je niet opnieuwe te verbinden.')
-
+    # st.text('Kies hieronder welke jaren je wilt meenemen. Klik daarna op verbinden. \n\nLet wel: hoe meer jaren, hoe langer het laden. \n\nAls je na het runnen de jaren wilt veranderen, moet je opnieuw op de verbinden-knop klikken. Als je een nieuwe regio wilt kiezen, hoef je niet opnieuwe te verbinden.')
+    
     jaren = st.pills('Jaar', [2024, 2023, 2022, 2021], default=[2024, 2023], selection_mode="multi")
 
     # API
