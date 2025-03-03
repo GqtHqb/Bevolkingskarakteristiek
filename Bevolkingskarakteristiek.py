@@ -158,11 +158,12 @@ class CBSData:
 @st.dialog('Info')
 def show_info():
     st.write(
-        'Kies hieronder welke jaren je wilt meenemen. Klik daarna op verbinden. 
-        \n\nLet wel: hoe meer jaren, hoe langer het laden. 
-        \n\nAls je na het runnen de jaren wilt veranderen, moet je opnieuw op de verbinden-knop klikken. 
-        Als je een nieuwe regio wilt kiezen, hoef je niet opnieuwe te verbinden.'
+        'Kies hieronder welke jaren je wilt meenemen. Klik daarna op verbinden. \
+        \n\nLet wel: hoe meer jaren, hoe langer het laden. \
+        \n\nAls je na het runnen de jaren wilt veranderen, moet je opnieuw op de verbinden-knop klikken. \
+        \n\nAls je een nieuwe regio wilt kiezen, hoef je niet opnieuwe te verbinden.' 
     )
+
 
 ############################################################################
 
