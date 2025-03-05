@@ -31,7 +31,7 @@ with st.sidebar:
 
     with st.popover('Info', icon='ℹ️'):
         st.header('**Vink een locatie aan in de meest linker kolom zoals in het voorbeeld hieronder. Klik daarna op de knop.**')
-        st.image("selection_help.png")
+        st.image("selection_help.gif")
     
     # Selecteer jaren
     jaar = st.pills('Jaren:', [2024, 2023, 2022, 2021], default=2024, selection_mode="single")
