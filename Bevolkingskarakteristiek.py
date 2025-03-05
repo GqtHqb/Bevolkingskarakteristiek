@@ -27,11 +27,11 @@ st.title('Bevolkingskarakteristiek')
 img = st.image('https://www.paradigmmarketinganddesign.com/wp-content/uploads/2022/02/How-to-use-demographics-in-digital-marketing-to-reach-your-target-audience.png')
 
 with st.sidebar:
-    st.header('**:rainbow[Opties]:**')
-
     with st.popover('Info', icon='ℹ️'):
         st.header('**Vink een locatie aan in de meest linker kolom zoals in het voorbeeld hieronder. Klik daarna op de knop.**')
         st.image("selection_help.gif")
+        
+    st.header('**:rainbow[Opties]:**')
     
     # Selecteer jaren
     jaar = st.pills('Jaren:', [2024, 2023, 2022, 2021], default=2024, selection_mode="single")
