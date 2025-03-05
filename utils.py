@@ -66,7 +66,7 @@ class DataProcessing:
 
                     if all([not pd.isna(value), 
                             value is not None,
-                            aantal_inwoners != 0.0]):
+                            aantal_inwoners != 0]):
                         df.at[kenmerk, col] = value / aantal_inwoners
         return df
 
