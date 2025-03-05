@@ -1,6 +1,6 @@
 import pandas as pd
-import re
-import numpy as np
+import plotly.graph_objects as go
+
 
 class DataProcessing:
     '''Processen van CBS data (filteren, transponeren, percentages berekenen)'''
@@ -62,7 +62,7 @@ class DataProcessing:
 
             for kenmerk in perc_kenmerken:
                 if kenmerk in df.index:
-                    value = df.at[kenmerk, col]
+                    value = df.at[kenmerk, col] # check of kenmerk überhaupt voorkomt. BuitenEuropa komt bijv. niet voor in 2021
 
                     if not pd.isna(value) and value is not None:
                         df.at[kenmerk, col] = value / aantal_inwoners
@@ -72,13 +72,15 @@ class DataProcessing:
         '''Afwijking berekenen tussen regio en Nederland'''
         A = df.iloc[:, 0]
         B = df.iloc[:, 1]
+        df_index = df.index
 
         afwijkingen = []
-        for a, b in zip(A, B):
+        for idx, a, b in zip(df_index, A, B):
             # Check for NaN values or other invalid conditions
             if any([pd.isna(a), pd.isna(b),  # Check for NaN using pd.isna()
                     a == 0, b == 0, 
-                    not isinstance(a, (int, float)), not isinstance(b, (int, float))]):
+                    not isinstance(a, (int, float)), not isinstance(b, (int, float)),
+                    idx in {'AantalInwoners', 'HuishoudensTotaal'}]):
 
                 afwijking = None
             else:
@@ -88,6 +90,10 @@ class DataProcessing:
         df['Afwijking'] = afwijkingen
         return df
     
+
+# —————————————————————————————————————————————————————————————————————————
+
+
 class DataframeFormatter:
     def __init__(self):
         self.config = {
@@ -127,51 +133,125 @@ class DataframeFormatter:
             'AfstandTotGroteSupermarkt': {'nieuwe_naam': 'Gemiddelde afstand tot supermarkt', 'value_type': 'abs', 'formatting': '{:,.2f}'}
         }
 
-        def format_df(self, df):
-            pass
+    def format_df(self, df):
+        df = self.format_columns(df)
+        df = self.format_afwijking(df)
+        df = self.format_kenmerken(df)
+        
+        return df
 
-        def format_column(self):
-            pass
+    def format_columns(self, df):
+        '''Formatting van Kolommen Nederland en [regio]'''
 
-        def format_afwijking(self):
-            pass
+        for k, v in self.config.items(): # data -> self
+            formatting_pattern = v['formatting']
 
-        def format_kenmerken(self):
-            pass
+            if formatting_pattern != ''  and k in df.index: # check of kenmerk überhaupt voorkomt. BuitenEuropa komt bijv. niet voor in 2021
 
+                for col in df.columns[:2]:
+                    cell_value = df.at[k, col]
 
-        def format_cells(self, df):
-            # Kolommen Nederland en [regio]
-            for k, v in self.kenmerken.items(): # data -> self
-                formatting_pattern = v['formatting']
+                    if pd.isna(cell_value) == False:
 
-                if formatting_pattern != '': 
+                        if k in ['GemiddeldInkomenPerInwoner', 'GemiddeldInkomenPerInkomensontvanger', 'GemiddeldeWOZWaardeVanWoningen']:
+                            cell_value = cell_value * 1000
 
-                    for col in df.columns[:2]:
-                        cell_value = df.at[k, col]
+                        df.at[k, col] = formatting_pattern.format(cell_value).replace(',', 'X').replace('.', ',').replace('X', '.')
 
-                        if pd.isna(cell_value) == False:
+        return df
 
-                            if k in ['GemiddeldInkomenPerInwoner', 'GemiddeldInkomenPerInkomensontvanger', 'GemiddeldeWOZWaardeVanWoningen']:
-                                cell_value = cell_value * 1000
-
-                            df.at[k, col] = formatting_pattern.format(cell_value).replace(',', 'X').replace('.', ',').replace('X', '.')
-
-            # Kolom afwijking
-            formatted_afwijkingen = []
-            for afwijking in df['Afwijking']:
-                if pd.isna(afwijking) == False:
-                    afwijking = '{:.1%}'.format(afwijking).replace(',', 'X').replace('.', ',').replace('X', '.')
-                
-                formatted_afwijkingen.append(afwijking)
+    def format_afwijking(self, df):
+        '''Formatting van kolom afwijking'''
+        formatted_afwijkingen = []
+        for afwijking in df['Afwijking']:
+            if pd.isna(afwijking) == False:
+                afwijking = '{:.1%}'.format(afwijking).replace(',', 'X').replace('.', ',').replace('X', '.')
             
-            df['Afwijking'] = formatted_afwijkingen
+            formatted_afwijkingen.append(afwijking)
+        
+        df['Afwijking'] = formatted_afwijkingen
+        return df
 
-            # Kenmerken formatten
-            df.insert(0, 'Kenmerk', df.index)
-            df = df.reset_index(drop=True)
-            df['Kenmerk'] = df['Kenmerk'].replace({k:v['nieuwe_naam'] for k,v in self.kenmerken.items()})
-            # df = df.style.set_properties(subset=['Kenmerk'], **{'text-align': 'left'})
+    def format_kenmerken(self, df):
+        '''Formatting van kenmerken (begint als index, eindigt als aparte kolom)'''
+        df.insert(0, 'Kenmerk', df.index)
+        df = df.reset_index(drop=True)
+        df['Kenmerk'] = df['Kenmerk'].replace({k:v['nieuwe_naam'] for k,v in self.config.items()})
+        # df = df.style.set_properties(subset=['Kenmerk'], **{'text-align': 'left'})
 
-            return df
+        return df
+
+
+# —————————————————————————————————————————————————————————————————————————
+
+
+class DataframeSplitter:
+    """df splitten in mini df'jes"""
+    def __init__(self):
+        self.kenmerken_minis = [
+            ['ID', 'WijkenEnBuurten', 'Gemeentenaam', 'SoortRegio', 'AantalInwoners', 'Bevolkingsdichtheid'],
+            ['HuishoudensTotaal', 'Eenpersoonshuishoudens', 'HuishoudensZonderKinderen', 'HuishoudensMetKinderen', 'GemiddeldeHuishoudensgrootte'],
+            ['k_0Tot15Jaar', 'k_15Tot25Jaar', 'k_25Tot45Jaar', 'k_45Tot65Jaar', 'k_65JaarOfOuder'],
+            ['GemiddeldInkomenPerInwoner', 'GemiddeldInkomenPerInkomensontvanger', 'AantalInkomensontvangers', 'HuishOnderOfRondSociaalMinimum'],
+            ['GemiddeldeWOZWaardeVanWoningen', 'Koopwoningen', 'HuurwoningenTotaal', 'PersonenautoSPerHuishouden', 'AfstandTotGroteSupermarkt'],
+            ['Buiten Europa (herkomstland)', 'Buiten Europa (geboren in Nederland)', 'Buiten Europa (geboren buiten Nederland)']
+        ]
+
+    def split_df(self, df):
+        minis = [df.reindex(indices) for indices in self.kenmerken_minis]
+        return minis
+
+
+ # —————————————————————————————————————————————————————————————————————————
+
+
+class RadarConstructor:
+    def __init__(self):
+        self.kenmerken_voor_radarchart = [
+            'GemiddeldeHuishoudensgrootte',
+            'Eenpersoonshuishoudens',
+            'HuishoudensMetKinderen',
+            'k_0Tot15Jaar',
+            'k_65JaarOfOuder',
+            'GemiddeldInkomenPerInkomensontvanger',
+            'GemiddeldeWOZWaardeVanWoningen',
+            'Koopwoningen',
+            'PersonenautoSPerHuishouden'
+        ]
+
+    def construct_radar(self, df):
+        categories = list(df['Kenmerk'])
+
+        fig = go.Figure()
+
+        # Nederland
+        fig.add_trace(go.Scatterpolar(
+            r=[0] * len(categories),
+            theta=categories,
+            fill='toself',
+            name='Nederland'
+        ))
+
+        # Regio
+        fig.add_trace(go.Scatterpolar(
+            r=df['Afwijking'],
+            theta=categories,
+            fill='toself',
+            name=df.columns[2],
+            line=dict(color='red'),
+            connectgaps=True
+        )),
+
+        fig.update_layout(
+            polar=dict(
+                radialaxis=dict(
+                    visible=True,
+                    tickformat='.0%'  # Format the ticks as percentages with no decimals
+                )
+            ),
+            showlegend=True
+        )
+
+        return fig
+
 
