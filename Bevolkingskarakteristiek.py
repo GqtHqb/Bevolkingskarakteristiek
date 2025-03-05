@@ -28,7 +28,7 @@ img = st.image('https://www.paradigmmarketinganddesign.com/wp-content/uploads/20
 
 with st.sidebar:
     with st.popover('Info', icon='ℹ️'):
-        st.markdown("### **1. Vink een rij aan. 2. Klik op de knop.**")
+        st.markdown("### **1. Vink een locatie aan. 2. Klik op de knop.**")
         st.image("selection_help.gif")
         
     st.header('**:rainbow[Opties]:**')
