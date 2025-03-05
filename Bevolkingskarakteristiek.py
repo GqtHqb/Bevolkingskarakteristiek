@@ -30,7 +30,7 @@ with st.sidebar:
     st.header('**:rainbow[Opties]:**')
 
     with st.popover('Info', icon='ℹ️'):
-        st.header('**Vink een locatie aan in de meest linker kolom zoals in het voorbeeld hieronder.**')
+        st.header('**Vink een locatie aan in de meest linker kolom zoals in het voorbeeld hieronder. \nKlik daarna op de knop.**')
         st.image("selection_help.png")
     
     # Selecteer jaren
@@ -40,7 +40,7 @@ with st.sidebar:
     df = load_table(jaar, folder='cbs_tabellen')
 
     # Selecteer regio
-    query = st.text_input('Locatie:', placeholder='Zoeken', help='Vink een locatie aan in de meest linker kolom')
+    query = st.text_input('Locatie:', placeholder='Zoeken', help='Vink een locatie aan in de meest linker kolom. Klik daarna op de knop.')
     region_df = df[['ID', 'WijkenEnBuurten', 'Gemeentenaam_1']][1:].copy()
     region_df = filter_regio_df(region_df, query)
     region_selection = st.dataframe(region_df, on_select='rerun', selection_mode='single-row', hide_index=True)
