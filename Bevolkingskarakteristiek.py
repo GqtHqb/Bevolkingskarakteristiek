@@ -1,10 +1,8 @@
 import streamlit as st
 # import cbsodata
 import pandas as pd
-import re
-import numpy as np
 import glob
-import re
+import plotly.graph_objects as go
 
 from utils import *
 
@@ -30,9 +28,13 @@ img = st.image('https://www.paradigmmarketinganddesign.com/wp-content/uploads/20
 
 with st.sidebar:
     st.header('**:rainbow[Opties]:**')
+
+    with st.popover('Info', icon='ℹ️'):
+        st.write('**Vink een locatie aan in de meest linker kolom.**')
+        st.image("selection_help.png")
     
     # Selecteer jaren
-    jaar = st.pills('Jaren:', [2024, 2023, 2022, 2021], default=None, selection_mode="single")
+    jaar = st.pills('Jaren:', [2024, 2023, 2022, 2021], default=2024, selection_mode="single")
 
     # Importeer tabel
     df = load_table(jaar, folder='cbs_tabellen')
@@ -54,10 +56,12 @@ with st.sidebar:
 
         run_button = st.button("Los geht's", type='primary', icon='🔥')
 
-
+    
 
 
 # ———————————— M A I N —————————————————————————————————————————————————————————————————————————
+
+
 
 if run_button:
     img.empty()
@@ -66,29 +70,33 @@ if run_button:
 
     tab1, tab2 = st.tabs([f'{WeB} {jaar}', 'Radar chart'])
 
-    with tab1:
+    with tab1: # Statistieken
+    
         st.header(f'{WeB} {jaar}')
 
         # Processen van data (filteren, transponeren, percentages berekenen)
         processor = DataProcessing(df)
         df = processor.process_df(cbs_id=cbs_id)
 
-        # Dataframe
-       
+        # df splitten in mini df'jes
+        splitter = DataframeSplitter()
+        minis = splitter.split_df(df)
 
+        # Formatting van mini df's
+        formatter = DataframeFormatter()
+        minis = [formatter.format_df(mini) for mini in minis]
 
+        for mini in minis:
+            st.dataframe(mini, hide_index=True, use_container_width=True)
 
+    with tab2: # Radar chart
 
-        st.dataframe(df, use_container_width=True)
+        radar = RadarConstructor()
+        radar_df = df.loc[radar.kenmerken_voor_radarchart]                 ; radar_df0 = radar_df.copy() # kopie zodat de df met formatting gepresenteerd kan worden.
+        radar_df = formatter.format_kenmerken(radar_df)
 
+        fig = radar.construct_radar(radar_df)
+        st.plotly_chart(fig)
 
+        st.dataframe(formatter.format_df(radar_df0))
 
-
-    
-
-
-
-
-
-# cd "/Users/quincyliem/My Drive/Projects/Kardol/Bevolkingskarakteristiek/V3"
-# streamlit run "bevolkingskarakterstiek V3.py"
