@@ -64,7 +64,9 @@ class DataProcessing:
                 if kenmerk in df.index:
                     value = df.at[kenmerk, col] # check of kenmerk überhaupt voorkomt. BuitenEuropa komt bijv. niet voor in 2021
 
-                    if not pd.isna(value) and value is not None:
+                    if all([not pd.isna(value), 
+                            value is not None,
+                            aantal_inwoners != 0.0]):
                         df.at[kenmerk, col] = value / aantal_inwoners
         return df
 
