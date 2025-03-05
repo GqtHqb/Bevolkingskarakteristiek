@@ -30,7 +30,7 @@ with st.sidebar:
     st.header('**:rainbow[Opties]:**')
 
     with st.popover('Info', icon='ℹ️'):
-        st.write('**Vink een locatie aan in de meest linker kolom.**')
+        st.header('**Vink een locatie aan in de meest linker kolom zoals in het voorbeeld hieronder.**')
         st.image("selection_help.png")
     
     # Selecteer jaren
